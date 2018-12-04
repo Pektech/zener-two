@@ -1,0 +1,84 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "zener two",
+            "intents": [
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": [
+                        "help"
+                    ]
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "ReadyGame",
+                    "slots": [
+                        {
+                            "name": "game_length",
+                            "type": "AMAZON.NUMBER",
+                            "samples": [
+                                "{game_length}",
+                                "i'll play with {game_length} cards",
+                                "{game_length} rounds"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "lets play",
+                        "start game",
+                        "play with {game_length} rounds",
+                        "start with {game_length} cards",
+                        "ready {game_length}"
+                    ]
+                }
+            ],
+            "types": []
+        },
+        "dialog": {
+            "intents": [
+                {
+                    "name": "ReadyGame",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "game_length",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Slot.603901855228.275160273234"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "prompts": [
+            {
+                "id": "Elicit.Slot.603901855228.275160273234",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "How many rounds do you want to try.  Five is a short game , Ten takes about X minutes,  twentyfive takes the longest but is the most accurate"
+                    }
+                ]
+            }
+        ]
+    }
+}
