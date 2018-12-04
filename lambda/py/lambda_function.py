@@ -35,10 +35,13 @@ from ask_sdk_model import (
 from ask_sdk_model.ui import simple_card, SimpleCard
 from ask_sdk_model.dialog import ElicitSlotDirective, DelegateDirective
 
-from .alexa import data
+from .alexa import data, cards
+from .alexa import dialogue
 
 required_slots = "game_length"
 rounds_allowed = ["5", "10", "25"]
+DECK = cards.shuffled_cards(cards.cards)
+
 
 # Skill builder object
 
@@ -53,11 +56,20 @@ logger.setLevel(logging.INFO)
 
 @sb.request_handler(can_handle_func=is_request_type("LaunchRequest"))
 def launch_request_handler(handler_input):
-    """Handler for Skill Launch."""
-
+    """Handler for Skill Launch.
+    Set session attributes for the game"""
     speech_text = data.WELCOME
+    game_session_attr = handler_input.attributes_manager.session_attributes
+    if not game_session_attr:
+        game_session_attr["GAME_RUNNING"] = 0
+        game_session_attr["SCORE"] = 0
+        game_session_attr["DECK"] = DECK
+        game_session_attr["CARD_COUNT"] = 0
+        game_session_attr["last_speech"] = speech_text
+
     return (
         handler_input.response_builder.speak(speech_text)
+        .ask(game_session_attr["last_speech"])
         .set_card(SimpleCard("Zener Cards", speech_text))
         .set_should_end_session(False)
         .response
@@ -69,17 +81,23 @@ def launch_request_handler(handler_input):
     and handler_input.request_envelope.request.dialog_state != DialogState.COMPLETED
 )
 def ready_game_handler(handler_input):
-
+    # handles the start of the game setting up how many rounds
     # current_intent gets details about returned intent for checking use .name, .slots etc
     current_intent = handler_input.request_envelope.request.intent
+    game_session_attr = handler_input.attributes_manager.session_attributes
+    game_session_attr["GAME_RUNNING"] = 1
     logger.info("In ReadyGameHandler")
     if (
         current_intent.slots["game_length"].name in required_slots
         and current_intent.slots["game_length"].value not in rounds_allowed
     ):
-        print("need length")
+
         return (
-            handler_input.response_builder.speak("ok how long a a game would you like")
+            handler_input.response_builder.speak(
+                "ok how big a deck of cards should I use? "
+                "Five is a short game, Fifteen is X minutes, Twenty-Five "
+                "is the about XX minutes but gives the most accurate score "
+            )
             .ask("five ten or fifteen")
             .add_directive(
                 ElicitSlotDirective(
@@ -98,7 +116,8 @@ def ready_game_handler(handler_input):
             )
             .response
         )
-
+    # game_session_attr['DECK_SIZE'] = current_intent.slots["game_length"].value
+    # game_session_attr['GAME_RUNNING'] = 1
     return handler_input.response_builder.add_directive(
         DelegateDirective(updated_intent=current_intent)
     ).response
@@ -109,20 +128,74 @@ def ready_game_handler(handler_input):
     and handler_input.request_envelope.request.dialog_state == DialogState.COMPLETED
 )
 def start_game(handler_input):
-    return handler_input.response_builder.speak("now we can start the game").response
+    game_session_attr = handler_input.attributes_manager.session_attributes
+    current_intent = handler_input.request_envelope.request.intent
+    if game_session_attr["GAME_RUNNING"] == 1:
+        game_session_attr["DECK_SIZE"] = current_intent.slots["game_length"].value
+        return handler_input.response_builder.speak(
+            "now we can start the game.  what card am I thinking off"
+        ).response
+
+
+@sb.request_handler(can_handle_func=is_intent_name("Zener"))
+def play_game(handler_input):
+    current_intent = handler_input.request_envelope.request.intent
+    guess = current_intent.slots["guess"].value
+
+    game_session_attr = handler_input.attributes_manager.session_attributes
+    score = game_session_attr["SCORE"]
+    game_deck = game_session_attr["DECK"]
+    deck_size = int(game_session_attr["DECK_SIZE"])
+    card_count = int(game_session_attr["CARD_COUNT"])
+    print(guess)
+    if guess is None or guess not in ["star", "cross", "square", "waves", "circle"]:
+        output = data.ERROR
+        game_session_attr["last_speech"] = output
+        handler_input.response_builder.speak(output).ask(output)
+        return handler_input.response_builder.response
+    if card_count < (deck_size - 1):
+
+        choose_card = dialogue.choose_a_card()
+
+        output = choose_card
+        game_session_attr["last_speech"] = output
+        # print(game_deck[card_count], guess, "score = ", score)
+        if guess == game_deck[card_count]:
+            score += 1
+        card_count += 1
+        game_session_attr["CARD_COUNT"] = card_count
+        game_session_attr["SCORE"] = score
+        game_session_attr["last_speech"] = output
+        handler_input.response_builder.speak(output).ask(output)
+        return handler_input.response_builder.response
+        # return handler_input.response_builder.speak(output).response
+    score = cards.final_score(score)
+    output = f"Okay game over.{score}"
+    return handler_input.response_builder.speak(output).response
+
+
+@sb.request_handler(can_handle_func=is_intent_name("AMAZON.HelpIntent"))
+def help_intent_handler(input):
+    """Single handler for Cancel and Stop Intent."""
+    # type: (HandlerInput) -> Response
+    speech_text = data.HELP
+
+    return (
+        input.response_builder.speak(speech_text).set_should_end_session(False).response
+    )
 
 
 @sb.request_handler(
     can_handle_func=lambda input: is_intent_name("AMAZON.CancelIntent")(input)
     or is_intent_name("AMAZON.StopIntent")(input)
 )
-def cancel_and_stop_intent_handler(handler_input):
+def cancel_and_stop_intent_handler(input):
     """Single handler for Cancel and Stop Intent."""
     # type: (HandlerInput) -> Response
     speech_text = "Thanks for playing!!"
 
-    handler_input.response_builder.speak(speech_text).set_should_end_session(True)
-    return handler_input.response_builder.response
+    input.response_builder.speak(speech_text).set_should_end_session(True)
+    return input.response_builder.response
 
 
 @sb.request_handler(can_handle_func=is_request_type("SessionEndedRequest"))
@@ -135,6 +208,34 @@ def session_ended_request_handler(handler_input):
         )
     )
     return handler_input.response_builder.response
+
+
+@sb.request_handler(can_handle_func=lambda input: True)
+def unhandled_intent_handler(handler_input):
+    """Handler for all other unhandled requests."""
+    # type: (HandlerInput) -> Response
+    speech = "Sorry I do not know that card. Please choose from Star, Cross, Waves, Square or Circle"
+    handler_input.response_builder.speak(speech).ask(speech)
+    return handler_input.response_builder.response
+
+
+@sb.exception_handler(can_handle_func=lambda i, e: True)
+def all_exception_handler(handler_input, exception):
+    """Catch all exception handler, log exception and
+    respond with custom message.
+    """
+    # type: (HandlerInput, Exception) -> Response
+    logger.error(exception, exc_info=True)
+    speech = "Sorry, I can't understand that. Please say again!!"
+    handler_input.response_builder.speak(speech).ask(speech)
+    return handler_input.response_builder.response
+
+
+@sb.global_response_interceptor()
+def log_response(handler_input, response):
+    """Response logger."""
+    # type: (HandlerInput, Response) -> None
+    logger.info("Response: {}".format(response))
 
 
 handler = sb.lambda_handler()
