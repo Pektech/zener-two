@@ -130,11 +130,10 @@ def ready_game_handler(handler_input):
 def start_game(handler_input):
     game_session_attr = handler_input.attributes_manager.session_attributes
     current_intent = handler_input.request_envelope.request.intent
-    if game_session_attr["GAME_RUNNING"] == 1:
-        game_session_attr["DECK_SIZE"] = current_intent.slots["game_length"].value
-        return handler_input.response_builder.speak(
-            "now we can start the game.  what card am I thinking off"
-        ).response
+    game_session_attr["DECK_SIZE"] = current_intent.slots["game_length"].value
+    return handler_input.response_builder.speak(
+        "now we can start the game.  what card am I thinking off"
+    ).response
 
 
 @sb.request_handler(can_handle_func=is_intent_name("Zener"))
