@@ -1,0 +1,6 @@
+.idea/
+venv/
+__pycache__/
+zappa_settings.json
+test.py
+scratch_4.py

@@ -1,7 +1,7 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "zener two",
+            "invocationName": "zener pek",
             "intents": [
                 {
                     "name": "AMAZON.FallbackIntent",
@@ -14,6 +14,9 @@
                 {
                     "name": "AMAZON.HelpIntent",
                     "samples": [
+                        "how do i play this game",
+                        "explain the game",
+                        "explain",
                         "help"
                     ]
                 },
@@ -39,15 +42,78 @@
                         }
                     ],
                     "samples": [
+                        "start game with {game_length} cards",
+                        "play with {game_length} cards",
+                        "ready",
                         "lets play",
                         "start game",
                         "play with {game_length} rounds",
                         "start with {game_length} cards",
                         "ready {game_length}"
                     ]
+                },
+                {
+                    "name": "Zener",
+                    "slots": [
+                        {
+                            "name": "guess",
+                            "type": "cards"
+                        }
+                    ],
+                    "samples": [
+                        "it is a {guess}",
+                        "it's {guess}",
+                        "I think it's a {guess}",
+                        "I think it's {guess}",
+                        "{guess}"
+                    ]
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "cards",
+                    "values": [
+                        {
+                            "id": "star",
+                            "name": {
+                                "value": "star"
+                            }
+                        },
+                        {
+                            "id": "waves",
+                            "name": {
+                                "value": "waves",
+                                "synonyms": [
+                                    "wave"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "cross",
+                            "name": {
+                                "value": "cross"
+                            }
+                        },
+                        {
+                            "id": "square",
+                            "name": {
+                                "value": "square"
+                            }
+                        },
+                        {
+                            "id": "circle",
+                            "name": {
+                                "value": "circle"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "ready"
+                            }
+                        }
+                    ]
+                }
+            ]
         },
         "dialog": {
             "intents": [

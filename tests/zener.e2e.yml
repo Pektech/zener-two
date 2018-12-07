@@ -1,0 +1,90 @@
+#=====================================================================================================================
+#     ______    _ ____  ______        __  _
+#    / __/ /__ (_) / / /_  __/__ ___ / /_(_)__  ___ _
+#   _\ \/  '_// / / /   / / / -_|_-</ __/ / _ \/ _ `/
+#  /___/_/\_\/_/_/_/   /_/  \__/___/\__/_/_//_/\_, /
+#                                             /___/
+#
+# Created by Bespoken
+# Learn more at https://read.bespoken.io/end-to-end/getting-started/
+#
+# Skill name: "Zener V2" by Ric Leddy
+# Test scope: Complete skill
+# Description: General End-to-end test suite
+#=====================================================================================================================
+
+
+---
+configuration:
+  locale: en-US
+  voiceId: Salli
+  type: e2e
+---
+- test : Invoke Skill, ask for explanation, start game thats uses 5 cards, end
+- open zener pek: welcome to Zener Cards
+- explain: This is a game designed
+- ready: Ok how big a deck
+- five : Now we can start the game
+- cross :
+    - prompt:
+        - what is the next card
+        - next card please
+        - focus, see the next card, be the next card, say the next card
+        - and the next card is ?
+        - next card
+        - let your mind go blank. Well not that blank. What card is next?
+        - concentrate and say whats next
+        - you've got an idea forming in your head. Its a card called?
+        - name that card
+- star :
+    - prompt:
+        - what is the next card
+        - next card please
+        - focus, see the next card, be the next card, say the next card
+        - and the next card is ?
+        - next card
+        - let your mind go blank. Well not that blank. What card is next?
+        - concentrate and say whats next
+        - you've got an idea forming in your head. Its a card called?
+        - name that card
+
+- waves :
+    - prompt:
+        - what is the next card
+        - next card please
+        - focus, see the next card, be the next card, say the next card
+        - and the next card is ?
+        - next card
+        - let your mind go blank. Well not that blank. What card is next?
+        - Concentrate and say whats next
+        - you've got an idea forming in your head. Its a card called?
+        - name that card
+
+- square :
+    - prompt:
+        - what is the next card
+        - next card please
+        - focus, see the next card, be the next card, say the next card
+        - and the next card is ?
+        - next card
+        - let your mind go blank. Well not that blank. What card is next?
+        - Concentrate and say whats next
+        - you've got an idea forming in your head. Its a card called?
+        - name that card
+- circle : okay game over
+
+---
+- test: Invoke skill for a 10 card deck , play one card , end
+- open zener pek and start game with ten cards : Now we can start the game
+- square :
+    - prompt:
+        - what is the next card
+        - next card please
+        - focus, see the next card, be the next card, say the next card
+        - and the next card is ?
+        - next card
+        - let your mind go blank. Well not that blank. What card is next?
+        - Concentrate and say whats next
+        - you've got an idea forming in your head. Its a card called?
+        - name that card
+- stop

@@ -1,0 +1,11 @@
+{
+  "handler": "app/alexa.py",
+  "locale": "en-US",
+  "trace": false,
+  "virtualDeviceToken": "alexa-5ce9f579-43fa-4f3a-8ebe-ceecf149268f",
+  "jest": {
+    "silent": false,
+    "collectCoverage": false
+
+  }
+}
