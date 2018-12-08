@@ -105,13 +105,8 @@
                             "name": {
                                 "value": "circle"
                             }
-                        },
-                        {
-                            "name": {
-                                "value": "ready"
-                            }
                         }
-                    ]
+                                            ]
                 }
             ]
         },

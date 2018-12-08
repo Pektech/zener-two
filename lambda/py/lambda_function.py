@@ -61,7 +61,7 @@ def launch_request_handler(handler_input):
     speech_text = data.WELCOME
     game_session_attr = handler_input.attributes_manager.session_attributes
     if not game_session_attr:
-        game_session_attr["GAME_RUNNING"] = 0
+        game_session_attr["GAME_STATE"] = 0
         game_session_attr["SCORE"] = 0
         game_session_attr["DECK"] = DECK
         game_session_attr["CARD_COUNT"] = 0
@@ -85,7 +85,7 @@ def ready_game_handler(handler_input):
     # current_intent gets details about returned intent for checking use .name, .slots etc
     current_intent = handler_input.request_envelope.request.intent
     game_session_attr = handler_input.attributes_manager.session_attributes
-    game_session_attr["GAME_RUNNING"] = 1
+
     logger.info("In ReadyGameHandler")
     if (
         current_intent.slots["game_length"].name in required_slots
@@ -129,6 +129,7 @@ def ready_game_handler(handler_input):
 )
 def start_game(handler_input):
     game_session_attr = handler_input.attributes_manager.session_attributes
+    game_session_attr["GAME_STATE"] = "RUNNING"
     current_intent = handler_input.request_envelope.request.intent
     game_session_attr["DECK_SIZE"] = current_intent.slots["game_length"].value
     return handler_input.response_builder.speak(
@@ -136,12 +137,28 @@ def start_game(handler_input):
     ).response
 
 
-@sb.request_handler(can_handle_func=is_intent_name("Zener"))
+def currently_playing(handler_input):
+    """Function that acts as can handle for game state."""
+    # type: (HandlerInput) -> bool
+    is_currently_playing = False
+    session_attr = handler_input.attributes_manager.session_attributes
+
+    if "GAME_STATE" in session_attr and session_attr["GAME_STATE"] == "RUNNING":
+        is_currently_playing = True
+
+    return is_currently_playing
+
+
+@sb.request_handler(
+    can_handle_func=lambda input: currently_playing(input)
+    and is_intent_name("Zener")(input)
+)
 def play_game(handler_input):
     current_intent = handler_input.request_envelope.request.intent
-    guess = current_intent.slots["guess"].value
-
     game_session_attr = handler_input.attributes_manager.session_attributes
+    if "guess" in current_intent.slots:
+        guess = current_intent.slots["guess"].value
+
     score = game_session_attr["SCORE"]
     game_deck = game_session_attr["DECK"]
     deck_size = int(game_session_attr["DECK_SIZE"])
@@ -165,11 +182,13 @@ def play_game(handler_input):
         game_session_attr["CARD_COUNT"] = card_count
         game_session_attr["SCORE"] = score
         game_session_attr["last_speech"] = output
-        handler_input.response_builder.speak(output).ask(output)
+        handler_input.response_builder.speak(output).ask(
+            "Please choose from Star, Cross, Waves, Square or Circle"
+        )
         return handler_input.response_builder.response
         # return handler_input.response_builder.speak(output).response
     score = cards.final_score(score)
-    output = f"Okay game over.{score}"
+    output = f"Okay game over <break strength='strong' />{score}"
     return handler_input.response_builder.speak(output).response
 
 
@@ -213,7 +232,7 @@ def session_ended_request_handler(handler_input):
 def unhandled_intent_handler(handler_input):
     """Handler for all other unhandled requests."""
     # type: (HandlerInput) -> Response
-    speech = "Sorry I do not know that card. Please choose from Star, Cross, Waves, Square or Circle"
+    speech = "Sorry I do not know that particular card. Please choose from Star, Cross, Waves, Square or Circle"
     handler_input.response_builder.speak(speech).ask(speech)
     return handler_input.response_builder.response
 
@@ -227,6 +246,19 @@ def all_exception_handler(handler_input, exception):
     logger.error(exception, exc_info=True)
     speech = "Sorry, I can't understand that. Please say again!!"
     handler_input.response_builder.speak(speech).ask(speech)
+    return handler_input.response_builder.response
+
+
+@sb.request_handler(can_handle_func=is_intent_name("AMAZON.FallbackIntent"))
+def fallback_handler(handler_input):
+    """AMAZON.FallbackIntent is only available in en-US locale.
+    This handler will not be triggered except in that locale,
+    so it is safe to deploy on any locale.
+    """
+    # type: (HandlerInput) -> Response
+    speech = "The Hello World skill can't help you with that.  " "You can say hello!!"
+    reprompt = "You can say hello!!"
+    handler_input.response_builder.speak(speech).ask(reprompt)
     return handler_input.response_builder.response
 
 

@@ -12,7 +12,7 @@ GAME = "{{choose_card}}"
 
 READY = "Okay. The deck is ready. What do you think the next card wil be?"
 
-SCORE = "Okay game over. {{score}}"
+SCORE = "Okay game over <break strength='strong'>  {{score}}"
 
 PLAYING = "The game has already started.  Focus hard, really concentrate.  What is the next card?"
 

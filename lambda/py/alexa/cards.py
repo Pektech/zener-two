@@ -21,4 +21,4 @@ def final_score(score):
             f"Your final score was {score}. yeah pretty average"
         )
     else:
-        return f"Wow {score} that is a really high score. Maybe you should play the lottery"
+        return f" Wow {score} that is a really high score. Maybe you should play the lottery"
